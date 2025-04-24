@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if form.instance.pk %}게시글 수정{% else %}새 게시글 작성{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">
+                        {% if form.instance.pk %}
+                            <i class="fas fa-edit"></i> 게시글 수정
+                        {% else %}
+                            <i class="fas fa-pencil-alt"></i> 새 게시글 작성
+                        {% endif %}
+                    </h2>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {{ form|crispy }}
+
+                        <div class="text-right mt-4">
+                            {% with board_url=category|add:"_board" %}
+                                {% if category == "qna" %}
+                                    <a href="{% url 'board:qna' %}" class="btn btn-secondary">
+                                {% elif category == "showcase" %}
+                                    <a href="{% url 'board:showcase' %}" class="btn btn-secondary">
+                                {% else %}
+                                    <a href="{% url 'board:free_board' %}" class="btn btn-secondary">
+                                {% endif %}
+                                <i class="fas fa-times"></i> 취소
+                            </a>
+                            {% endwith %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {% if form.instance.pk %}수정{% else %}작성{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 이미지 미리보기
+    $('#id_image').change(function() {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#image-preview').attr('src', e.target.result).show();
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

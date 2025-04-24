@@ -1,0 +1,45 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}게시글 삭제 - {{ post.title }} - PyBlog{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        게시글 삭제 확인
+                    </h2>
+                    
+                    <p class="lead mb-4">정말로 "{{ post.title }}" 게시글을 삭제하시겠습니까?</p>
+                    
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="{{ post.title }}" 
+                             class="img-fluid mb-4" style="max-height: 200px;">
+                    {% endif %}
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        이 작업은 되돌릴 수 없으며, 게시글에 달린 모든 댓글도 함께 삭제됩니다.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> 삭제
+                            </button>
+                            <a href="{% url 'blog:post_detail' post.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 취소
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

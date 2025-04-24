@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+
+{% block title %}프로필 - PyBlog{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" class="rounded-circle profile-image mb-3" alt="프로필 이미지">
+                        {% else %}
+                            <div class="profile-image rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-user fa-4x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <h2 class="mb-2">{{ user.username }}</h2>
+                        <p class="text-muted mb-3">{{ user.email }}</p>
+                        <div class="mb-4">
+                            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+                                <i class="fas fa-user-edit"></i> 프로필 수정
+                            </a>
+                            <a href="{% url 'accounts:password_change' %}" class="btn btn-secondary">
+                                <i class="fas fa-key"></i> 비밀번호 변경
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h3>소개</h3>
+                        <p>{{ user.bio|default:"소개가 없습니다." }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h3>작성한 게시글</h3>
+                        <div class="list-group">
+                            {% for post in user.post_set.all %}
+                                <a href="{% url 'blog:post_detail' post.pk %}" class="list-group-item list-group-item-action">
+                                    {{ post.title }}
+                                    <small class="text-muted float-end">{{ post.created_at|date:"Y-m-d" }}</small>
+                                </a>
+                            {% empty %}
+                                <div class="alert alert-info">아직 작성한 게시글이 없습니다.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h3>작성한 댓글</h3>
+                        <div class="list-group">
+                            {% for comment in user.comment_set.all %}
+                                <a href="{% url 'blog:post_detail' comment.post.pk %}" class="list-group-item list-group-item-action">
+                                    {{ comment.content|truncatewords:10 }}
+                                    <small class="text-muted float-end">{{ comment.created_at|date:"Y-m-d" }}</small>
+                                </a>
+                            {% empty %}
+                                <div class="alert alert-info">아직 작성한 댓글이 없습니다.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

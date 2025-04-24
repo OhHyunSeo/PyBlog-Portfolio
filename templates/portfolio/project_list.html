@@ -1,0 +1,74 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Portfolio - 오현서의 Blog{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-4">Portfolio</h1>
+            {% if user.is_superuser %}
+                <a href="{% url 'portfolio:project_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 새 프로젝트
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for project in projects %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" class="card-img-top" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ project.title }}</h5>
+                        <p class="card-text">{{ project.description|truncatewords:30 }}</p>
+                        
+                        {% if project.tags.exists %}
+                            <div class="mb-3">
+                                {% for tag in project.tags.all %}
+                                    <span class="badge badge-primary">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="btn-group">
+                            <a href="{% url 'portfolio:project_detail' project.pk %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> 자세히 보기
+                            </a>
+                            {% if project.url %}
+                                <a href="{{ project.url }}" class="btn btn-success" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> 사이트 방문
+                                </a>
+                            {% endif %}
+                            {% if project.github_url %}
+                                <a href="{{ project.github_url }}" class="btn btn-dark" target="_blank">
+                                    <i class="fab fa-github"></i> GitHub
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        {% if user.is_superuser %}
+                            <div class="mt-2">
+                                <a href="{% url 'portfolio:project_edit' project.pk %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> 수정
+                                </a>
+                                <a href="{% url 'portfolio:project_delete' project.pk %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i> 삭제
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col">
+                <p>아직 등록된 프로젝트가 없습니다.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

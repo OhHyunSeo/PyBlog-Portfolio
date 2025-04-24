@@ -1,0 +1,191 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="card-title mb-0">{{ post.title }}</h2>
+                <div class="text-muted small">
+                    <i class="fas fa-eye"></i> {{ post.views }}
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <img src="{% if post.author.profile_image %}{{ post.author.profile_image.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" 
+                         alt="{{ post.author }}" class="rounded-circle profile-image-small mr-2">
+                    <div>
+                        <div>{{ post.author }}</div>
+                        <small class="text-muted">
+                            <i class="far fa-clock"></i> {{ post.created_at|date:"Y-m-d H:i" }}
+                            {% if post.created_at != post.updated_at %}
+                                <span class="ml-1">(수정됨)</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% if user == post.author %}
+                <div>
+                    <a href="{% url 'board:post_update' post.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> 수정
+                    </a>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">
+                        <i class="fas fa-trash"></i> 삭제
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card-text mb-4">
+                {{ post.content|safe }}
+            </div>
+
+            {% if post.image %}
+            <div class="text-center mb-4">
+                <img src="{{ post.image.url }}" alt="게시글 이미지" class="img-fluid rounded">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title mb-4">
+                <i class="far fa-comment"></i> 댓글 
+                <span class="text-muted">({{ post.comments.count }})</span>
+            </h4>
+
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'board:comment_create' post.pk %}" class="mb-4">
+                {% csrf_token %}
+                {{ comment_form|crispy }}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> 댓글 작성
+                </button>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                댓글을 작성하려면 <a href="{% url 'accounts:login' %}">로그인</a>이 필요합니다.
+            </div>
+            {% endif %}
+
+            {% if post.comments.exists %}
+            <div class="comments-list">
+                {% for comment in post.comments.all %}
+                <div class="comment mb-3 p-3 border rounded" id="comment-{{ comment.pk }}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <img src="{% if comment.author.profile_image %}{{ comment.author.profile_image.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" 
+                                 alt="{{ comment.author }}" class="rounded-circle profile-image-small mr-2">
+                            <div>
+                                <div>{{ comment.author }}</div>
+                                <small class="text-muted">
+                                    {{ comment.created_at|date:"Y-m-d H:i" }}
+                                    {% if comment.created_at != comment.updated_at %}
+                                        <span class="ml-1">(수정됨)</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% if user == comment.author %}
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm edit-comment" data-id="{{ comment.pk }}">
+                                <i class="fas fa-edit"></i> 수정
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm delete-comment" data-id="{{ comment.pk }}">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="comment-content" id="comment-content-{{ comment.pk }}">
+                        {{ comment.content|linebreaks }}
+                    </div>
+                    <div class="comment-edit-form d-none" id="comment-edit-{{ comment.pk }}">
+                        <form method="post" action="{% url 'board:comment_update' comment.pk %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <textarea class="form-control" name="content" rows="3">{{ comment.content }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">저장</button>
+                            <button type="button" class="btn btn-secondary btn-sm cancel-edit" data-id="{{ comment.pk }}">취소</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center">아직 댓글이 없습니다.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">게시글 삭제</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                정말로 이 게시글을 삭제하시겠습니까?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                <form method="post" action="{% url 'board:post_delete' post.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">삭제</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 댓글 수정 버튼 클릭
+    $('.edit-comment').click(function() {
+        var commentId = $(this).data('id');
+        $('#comment-content-' + commentId).addClass('d-none');
+        $('#comment-edit-' + commentId).removeClass('d-none');
+    });
+
+    // 댓글 수정 취소
+    $('.cancel-edit').click(function() {
+        var commentId = $(this).data('id');
+        $('#comment-content-' + commentId).removeClass('d-none');
+        $('#comment-edit-' + commentId).addClass('d-none');
+    });
+
+    // 댓글 삭제
+    $('.delete-comment').click(function() {
+        if (confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+            var commentId = $(this).data('id');
+            $.post('{% url "board:comment_delete" 0 %}'.replace('0', commentId), {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            })
+            .done(function() {
+                $('#comment-' + commentId).fadeOut(function() {
+                    $(this).remove();
+                });
+            })
+            .fail(function() {
+                alert('댓글 삭제에 실패했습니다.');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if category == 'free' %}
+        자유게시판
+    {% elif category == 'qna' %}
+        Q&A
+    {% else %}
+        웹사이트 자랑하기
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                {% if category == 'free' %}
+                    <i class="fas fa-comments"></i> 자유게시판
+                {% elif category == 'qna' %}
+                    <i class="fas fa-question-circle"></i> Q&A
+                {% else %}
+                    <i class="fas fa-laptop-code"></i> 웹사이트 자랑하기
+                {% endif %}
+            </h2>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="col-auto">
+            <a href="{% url 'board:post_create' %}?category={{ category }}" class="btn btn-primary">
+                <i class="fas fa-pen"></i> 글쓰기
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if posts %}
+        {% for post in posts %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-1">
+                        <a href="{% url 'board:post_detail' post.pk %}" class="text-dark">{{ post.title }}</a>
+                    </h5>
+                    <small class="text-muted">
+                        <i class="fas fa-eye"></i> {{ post.views }}
+                    </small>
+                </div>
+                <div class="card-text text-muted small mb-2">
+                    {{ post.content|truncatewords:30 }}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="small">
+                        <img src="{% if post.author.profile_image %}{{ post.author.profile_image.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" 
+                             alt="{{ post.author }}" class="rounded-circle profile-image-small mr-1">
+                        {{ post.author }}
+                    </div>
+                    <div class="text-muted small">
+                        <i class="far fa-clock"></i> {{ post.created_at|date:"Y-m-d H:i" }}
+                        <i class="far fa-comment ml-2"></i> {{ post.comments.count }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">아직 게시글이 없습니다.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
